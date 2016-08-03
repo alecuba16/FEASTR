@@ -1,0 +1,112 @@
+PKG_CFLAGS=-O3 -fPIC -DCOMPILE_C
+PKG_CPPFLAGS=-IlibFSToolboxR -IMIToolbox -O3 -fPIC -DCOMPILE_C
+PKG_LIBS=-LlibFSToolboxR -lFSToolboxR -lMIToolbox
+
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+#$(SHLIB): libFSToolboxR/libFSToolboxR.so
+
+LIB_SO = libFSToolboxR.so
+
+exclude=FCBF.m FCBF
+OS := $(shell gcc -dumpmachine)
+$(info $$OS is [${OS}])
+ifneq (, $(findstring linux, $(OS)))
+    #Linux
+    MITOOLBOXPATH = $(ROOT_DIR)/MIToolbox/
+    OUTPUTLIB=$(LIB_SO)
+else 
+    ifneq  (, $(findstring darwin, $(OS)))
+		#Mac
+		MITOOLBOXPATH = $(ROOT_DIR)/MIToolbox/
+		OUTPUTLIB=$(LIB_SO)
+	else
+		MITOOLBOXPATH = $(ROOT_DIR)\\MIToolbox\\
+		OUTPUTLIB=libFSToolboxR.dll
+	endif
+endif
+objects = mRMR_D.o CMIM.o JMI.o DISR.o CondMI.o ICAP.o BetaGamma.o MIM.o FSToolboxR.o MutualInformation.o Entropy.o CalculateProbability.o ArrayOperations.o
+
+all: shared
+
+shared: $(LIB_SO)
+
+shared_test: $(LIB_SO) test.o
+
+$(LIB_SO): $(objects)
+	rm -f $(LIB_SO)
+	$(CC) $(PKG_CFLAGS) -shared -Wl,-soname,$(LIB_SO) -o $(OUTPUTLIB) $(objects) -I$(MITOOLBOXPATH) -lm
+
+FSToolboxR.o : FSToolboxR.c
+	$(CC) $(PKG_CFLAGS) -c FSToolboxR.c -I$(MITOOLBOXPATH)
+	
+mRMR_D.o: mRMR_D.c
+	$(CC) $(PKG_CFLAGS) -c mRMR_D.c -I$(MITOOLBOXPATH)
+	
+CMIM.o: CMIM.c
+	$(CC) $(PKG_CFLAGS) -c CMIM.c -I$(MITOOLBOXPATH)
+			
+MIM.o: MIM.c
+	$(CC) $(PKG_CFLAGS) -c MIM.c -I$(MITOOLBOXPATH)
+	
+JMI.o: JMI.c
+	$(CC) $(PKG_CFLAGS) -c JMI.c -I$(MITOOLBOXPATH)
+	
+DISR.o: DISR.c
+	$(CC) $(PKG_CFLAGS) -c DISR.c -I$(MITOOLBOXPATH)
+	
+CondMI.o: CondMI.c
+	$(CC) $(PKG_CFLAGS) -c CondMI.c -I$(MITOOLBOXPATH)
+	
+ICAP.o: ICAP.c
+	$(CC) $(PKG_CFLAGS) -c ICAP.c -I$(MITOOLBOXPATH)
+	
+BetaGamma.o: BetaGamma.c
+	$(CC) $(PKG_CFLAGS) -c BetaGamma.c -I$(MITOOLBOXPATH)
+	
+MutualInformation.o: $(MITOOLBOXPATH)MutualInformation.c	
+	$(CC) $(PKG_CFLAGS) -c $(MITOOLBOXPATH)MutualInformation.c -I$(MITOOLBOXPATH)
+	
+Entropy.o: $(MITOOLBOXPATH)Entropy.c
+	$(CC) $(PKG_CFLAGS) -c $(MITOOLBOXPATH)Entropy.c -I$(MITOOLBOXPATH)
+	
+CalculateProbability.o: $(MITOOLBOXPATH)CalculateProbability.c
+	$(CC) $(PKG_CFLAGS) -c $(MITOOLBOXPATH)CalculateProbability.c -I$(MITOOLBOXPATH)
+	
+ArrayOperations.o: $(MITOOLBOXPATH)ArrayOperations.c
+	$(CC) $(PKG_CFLAGS) -c $(MITOOLBOXPATH)ArrayOperations.c -I$(MITOOLBOXPATH)
+
+test.o: test.c 
+	$(COMPILER) $(CXXFLAGS) test.c -o test -L$(ROOT_DIR) -lFSToolboxR -Wl,-rpath=.
+	chmod 755 test;
+
+.PHONY : debug
+debug:
+	$(MAKE) shared_test "CXXFLAGS = -fPIC -DCOMPILE_C -g -DDEBUG"
+
+.PHONY : test
+test:
+	$(MAKE) shared_test "CXXFLAGS = -O3 -fPIC -DCOMPILE_C"
+	
+.PHONY : x86
+x86:
+	$(MAKE) shared "CXXFLAGS = -O3 -fPIC -DCOMPILE_C -m32"
+	
+.PHONY : x64
+x64:
+	$(MAKE) shared "CXXFLAGS = -O3 -fPIC -DCOMPILE_C -m64"
+	
+.PHONY : intel
+intel:
+	$(MAKE) shared "COMPILER = icc" "LINKER = icc" "CXXFLAGS = -O2 -fPIC -xHost"
+
+.PHONY : clean
+clean:
+	rm -f *.o 
+	rm -f libFSToolboxR.so.*
+	rm -f libFSToolboxR.so
+	rm -f libFSToolboxR.a
+	rm -f test
+
+libFSToolboxR/libFSToolboxR.so:
+       @(cd libFSToolboxR &&$(MAKE) CC="$(CC)" $(CC) $(PKG_CFLAGS) $(ARCH) $(DEBUG))

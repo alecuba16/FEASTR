@@ -1,0 +1,15 @@
+Package: FSToolboxR
+Type: Package
+Title: R wrapper for FSToolboxR
+Version: 1.1.4-0
+Date: 2016-07-13
+Author: Alejandro Blanco Martinez <alecuba16@gmail.com>
+Maintainer: Alejandro Blanco Martinez <alecuba16@gmail.com>
+Description: A R port of FSToolbox (FEAST) made by Adam Pocock for matlab 
+             that contains several feature selection algorithms.
+             The original code src is available at here:
+             (https://github.com/Craigacp/FEAST/).
+License: GPL (>= 3)
+Depends: R (>= 2.14)
+Collate: FSToolboxR.r
+NeedsCompilation: yes
